@@ -1,0 +1,21 @@
+# ---------- Stage 1 : build du frontend ----------
+FROM node:26-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# ---------- Stage 2 : serveur Nginx ----------
+FROM nginx:stable-alpine
+
+# Configuration du reverse proxy
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copier les fichiers generes par Vite
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
